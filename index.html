@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+  <title>Amazon Rank Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Amazon Best Sellers Rank Tracker</h1>
+
+  <label for="bookSelect">Choose title:</label>
+  <select id="bookSelect"></select>
+
+  <canvas id="rankChart"></canvas>
+
+  <script>
+    let chart;
+
+    async function loadData() {
+      const data = await fetch("./data/ranks.json").then(r => r.json());
+
+      const titles = [...new Set(data.map(row => row.title))];
+
+      const select = document.getElementById("bookSelect");
+      select.innerHTML = titles
+        .map(title => `<option value="${title}">${title}</option>`)
+        .join("");
+
+      function drawChart(title) {
+        const rows = data
+          .filter(row => row.title === title && row.rank)
+          .sort((a, b) => a.date.localeCompare(b.date));
+
+        const labels = rows.map(row => row.date);
+        const ranks = rows.map(row => row.rank);
+
+        if (chart) chart.destroy();
+
+        chart = new Chart(document.getElementById("rankChart"), {
+          type: "line",
+          data: {
+            labels,
+            datasets: [{
+              label: `${title} Best Sellers Rank`,
+              data: ranks,
+              tension: 0.25
+            }]
+          },
+          options: {
+            scales: {
+              y: {
+                reverse: true,
+                title: {
+                  display: true,
+                  text: "Amazon Rank — lower is better"
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: "Date"
+                }
+              }
+            }
+          }
+        });
+      }
+
+      drawChart(titles[0]);
+
+      select.addEventListener("change", e => {
+        drawChart(e.target.value);
+      });
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
