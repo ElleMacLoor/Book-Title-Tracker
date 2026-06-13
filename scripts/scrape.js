@@ -1,4 +1,4 @@
-const fs = require("fs");
+import fs from "fs";
 
 const ASINS = JSON.parse(fs.readFileSync("data/asins.json", "utf8"));
 const historyPath = "data/ranks.json";
