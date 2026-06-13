@@ -9,8 +9,23 @@ if (fs.existsSync(historyPath)) {
 }
 
 function extractBestSellerRank(html) {
-  const match = html.match(/Best Sellers Rank:[\s\S]*?#([\d,]+)/i);
-  return match ? Number(match[1].replace(/,/g, "")) : null;
+  const patterns = [
+    /Best Sellers Rank[\s\S]{0,1000}?#([\d,]+)/i,
+    /Best\s*Sellers\s*Rank[\s\S]{0,1000}?([\d,]+)\s+in\s+Books/i,
+    /#([\d,]+)\s+in\s+Books/i
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match) {
+      return Number(match[1].replace(/,/g, ""));
+    }
+  }
+
+  fs.writeFileSync("debug-amazon.html", html);
+  console.log("No rank found. Saved debug-amazon.html");
+
+  return null;
 }
 
 async function fetchRank(item) {
