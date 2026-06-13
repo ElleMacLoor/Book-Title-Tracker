@@ -14,6 +14,8 @@ function extractBestSellerRank(html) {
 }
 
 async function fetchRank(item) {
+  console.log(`Fetching: ${item.title} - ${item.url}`);
+
   const res = await fetch(item.url, {
     headers: {
       "User-Agent": "Mozilla/5.0",
@@ -21,33 +23,29 @@ async function fetchRank(item) {
     }
   });
 
+  console.log(`Status for ${item.title}: ${res.status}`);
+
   const html = await res.text();
-  return extractBestSellerRank(html);
+  const rank = extractBestSellerRank(html);
+
+  console.log(`Rank found for ${item.title}: ${rank}`);
+
+  return rank;
 }
 
 const today = new Date().toISOString().slice(0, 10);
 
 for (const item of ASINS) {
-  try {
-    const rank = await fetchRank(item);
+  const rank = await fetchRank(item);
 
-    history.push({
-      date: today,
-      title: item.title,
-      asin: item.asin,
-      rank
-    });
-
-    console.log(`${item.title}: ${rank ?? "not found"}`);
-  } catch (err) {
-    history.push({
-      date: today,
-      title: item.title,
-      asin: item.asin,
-      rank: null,
-      error: err.message
-    });
-  }
+  history.push({
+    date: today,
+    title: item.title,
+    asin: item.asin,
+    rank
+  });
 }
 
 fs.writeFileSync(historyPath, JSON.stringify(history, null, 2));
+
+console.log("Updated ranks.json");
